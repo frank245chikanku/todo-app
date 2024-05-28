@@ -1,0 +1,102 @@
+import { Request, Response } from "express";
+import { LoginDto, RegisterDto } from "./dto";
+import { validate } from "class-validator";
+import { StatusCodes } from "http-status-codes";
+import { prisma } from "../config/prisma";
+import { compare, hash } from "bcrypt";
+import * as jwt from "jsonwebtoken"
+
+export class UserCollection{
+    async CreateUser(req:Request,res:Response){
+        try {
+            const dto = new RegisterDto(req.body);
+
+            const errors = await validate(dto);
+            if(errors.length>0){
+                return res.status(StatusCodes.CONFLICT).json({
+                    error: errors.map((e)=>e.constraints),
+                })
+            }
+
+            const findUser = await prisma.user.findUnique({
+                where:{
+                    email:dto.email,
+                }
+            });
+            if(findUser){
+                return res.status(StatusCodes.BAD_REQUEST).json({
+                    message: "user already exists"
+                })
+            }
+
+            const hashPassword = await hash(dto.password,10);
+
+            const user = await prisma.user.create({
+                data:{
+                    username:dto.username,
+                    email:dto.email,
+                    password:hashPassword,
+                }
+            })
+
+            return res.status(StatusCodes.CREATED).json(user)
+        } catch (error:any) {
+            return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+                error: error.message || error,
+                message: "something went wrong"
+            })
+            
+        }
+    }
+
+    async Login(req:Request,res:Response){
+        try {
+            const dto = new LoginDto(req.body);
+            const errors = await validate(dto);
+
+            if(errors.length>0){
+                return res.status(StatusCodes.CONFLICT).json({
+                    error:errors.map((e)=>e.constraints)
+                })
+            }
+
+            const user = await prisma.user.findUnique({
+                where:{
+                    email:dto.email,
+                }
+            })
+
+            if(!user){
+                return res.status(StatusCodes.NOT_FOUND).json({
+                    message:"user not found"
+                })
+            }
+
+            const match = await compare(dto.password,user.password);
+
+            if(!match){
+                return res.status(StatusCodes.BAD_REQUEST).json({
+                    message: "incorrect password"
+                })
+            }
+
+            const payload = {
+                id:user.id,
+                username:user.username,
+                email:user.email
+            }
+
+            const token = await jwt.sign(payload,`${process.env.SECRET_KEY}`);
+            return res.status(StatusCodes.ACCEPTED).json({
+                token:token,
+                user:payload
+            })
+        } catch (error:any) {
+            return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+                error: error.message || error,
+                message: "something went wrong"
+            })
+            
+        }
+    }
+}
