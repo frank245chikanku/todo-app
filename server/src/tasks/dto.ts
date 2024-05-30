@@ -10,16 +10,11 @@ export class CreateTaskDto{
     description:string;
 
     @IsNotEmpty()
-    @IsString()
-    duedate:string;
-
-    @IsNotEmpty()
     @IsNumber()
     userId:number;
     constructor(d:CreateTaskDto){
         this.title=d.title;
         this.description=d.description;
-        this.duedate=d.duedate;
         this.userId=d.userId;
     }
 }

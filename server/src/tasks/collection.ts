@@ -21,7 +21,6 @@ export class TaskCollection{
                 data:{
                     title:dto.title,
                     description:dto.description,
-                    duedate:dto.duedate,
                     userId:dto.userId
                 }
             })
@@ -72,9 +71,9 @@ export class TaskCollection{
         try {
             const id = Number(req.params.id);
             
-            const task = await prisma.tasks.findUnique({
+            const task = await prisma.tasks.findMany({
                 where:{
-                    id:id
+                    userId:id
                 }
             })
 
@@ -93,7 +92,11 @@ export class TaskCollection{
 
             const dto = new UpdateDto(req.body);
 
+            console.log(dto)
+
             const errors = await validate(dto);
+
+            console.log(errors)
 
             if(errors.length>0){
                 return res.status(StatusCodes.CONFLICT).json({
