@@ -3,7 +3,7 @@ This is a react application that manages a to-do-list,It can add tasks to the li
 Completed tasks can be visually differentiated from uncompleted tasks, users can easily edit and delete their tasks.
 #The project has been deployed to vercel and can be accessed through the following link:
 
-https://todo-app-server-indol.vercel.app/
+https://todo-app-ten-blond-94.vercel.app/
 
 #FUNCTIONALITY IMPLEMENTED:
 
